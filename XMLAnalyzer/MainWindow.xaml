@@ -7,24 +7,39 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="645.576">
     <Grid>
-        <Grid HorizontalAlignment="Stretch" Margin="10,10,10,10" VerticalAlignment="Stretch"  >
-            <Grid Height="50px" HorizontalAlignment="Stretch" VerticalAlignment="Top" >
-                <GroupBox Header="Wybierz plik wejściowy (XML)" HorizontalAlignment="Left" Height="50" VerticalAlignment="Top" Width="230">
-                    <Button Content="Select" HorizontalAlignment="Left" Height="20" Margin="0,0,0,-5"  VerticalAlignment="Center" Width="75" />
-                </GroupBox>
-                <GroupBox Header="Wybierz folder zapisu (XML)" HorizontalAlignment="Right" Height="50" VerticalAlignment="Top" Width="230">
-                    <Button Content="Select" HorizontalAlignment="Left" Height="20"  VerticalAlignment="Center" Width="75" />
-                </GroupBox>
-            </Grid>
-           <Expander Margin="0,65,0,10" IsExpanded="True">
-                <Expander.Header>
-                    <StackPanel>
-                        <TextBlock>The list of found errors in your file</TextBlock>
-                    </StackPanel>
-                </Expander.Header>
-                <DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-            </Expander>
+     
 
-        </Grid>
+        <DockPanel>
+            <Menu DockPanel.Dock="Top">
+                <MenuItem Header="_File">
+                    <MenuItem Header="_Open"/>
+                    <MenuItem Header="_Close"/>
+                    <MenuItem Header="_Save"/>
+                </MenuItem>
+            </Menu>
+            <StackPanel>
+                <Grid HorizontalAlignment="Stretch" Margin="10,10,10,10" VerticalAlignment="Stretch"  >
+                    <Grid Height="50px" HorizontalAlignment="Stretch" VerticalAlignment="Top" >
+                        <GroupBox Header="Wybierz plik wejściowy (XML)" HorizontalAlignment="Left" Height="50" VerticalAlignment="Top" Width="230">
+                            <Button Content="Select" HorizontalAlignment="Left" Height="20" Margin="0,0,0,-5"  VerticalAlignment="Center" Width="75" Click="Button_Click" />
+                        </GroupBox>
+                        <GroupBox Header="Wybierz folder zapisu (XML)" HorizontalAlignment="Right" Height="50" VerticalAlignment="Top" Width="230">
+                            <Button Content="Select" HorizontalAlignment="Left" Height="20"  VerticalAlignment="Center" Width="75" />
+                        </GroupBox>
+                    </Grid>
+                    <Expander Margin="0,65,0,10" IsExpanded="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <Expander.Header>
+                            <StackPanel>
+                                <TextBlock>The list of found errors in your file</TextBlock>
+                            </StackPanel>
+                        </Expander.Header>
+                        <DataGrid MaxHeight="600"  VerticalScrollBarVisibility="Visible" HorizontalAlignment="Stretch" x:Name="file_lines"/>
+                    </Expander>
+
+                </Grid>
+
+            </StackPanel>
+        </DockPanel>
+        
     </Grid>
 </Window>
