@@ -55,6 +55,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Attribute.cs" />
+    <Compile Include="Error.cs" />
+    <Compile Include="Line.cs" />
+    <Compile Include="Tag.cs" />
+    <Compile Include="Text.cs" />
     <Compile Include="Xml.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
