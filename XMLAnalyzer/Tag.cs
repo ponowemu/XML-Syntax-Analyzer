@@ -16,5 +16,6 @@ namespace XMLAnalyzer
         public Tag Parent { get; set; }
         public bool TagType { get; set; }
         public Text Text { get; set; }
+        public int LineNumber { get; set; }
     }
 }

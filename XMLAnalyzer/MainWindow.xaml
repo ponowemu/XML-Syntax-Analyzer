@@ -19,15 +19,16 @@
             </Menu>
             <StackPanel>
                 <Grid HorizontalAlignment="Stretch" Margin="10,10,10,10" VerticalAlignment="Stretch"  >
-                    <Grid Height="50px" HorizontalAlignment="Stretch" VerticalAlignment="Top" >
+                    <Grid Height="80px" HorizontalAlignment="Stretch" VerticalAlignment="Top" >
                         <GroupBox Header="Wybierz plik wejściowy (XML)" HorizontalAlignment="Left" Height="50" VerticalAlignment="Top" Width="230">
                             <Button Content="Select" HorizontalAlignment="Left" Height="20" Margin="0,0,0,-5"  VerticalAlignment="Center" Width="75" Click="Button_Click" />
                         </GroupBox>
                         <GroupBox Header="Wybierz folder zapisu (XML)" HorizontalAlignment="Right" Height="50" VerticalAlignment="Top" Width="230">
                             <Button Content="Select" HorizontalAlignment="Left" Height="20"  VerticalAlignment="Center" Width="75" />
                         </GroupBox>
+                        <Button Content="Validate" HorizontalAlignment="Left" Height="20" Width="200" VerticalAlignment="Bottom" Click="Button_Click_1"></Button>
                     </Grid>
-                    <Expander Margin="0,65,0,10" IsExpanded="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <Expander Margin="0,105,0,10" IsExpanded="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                         <Expander.Header>
                             <StackPanel>
                                 <TextBlock>The list of found errors in your file</TextBlock>
