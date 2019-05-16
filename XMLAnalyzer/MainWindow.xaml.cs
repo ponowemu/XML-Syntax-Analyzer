@@ -174,11 +174,24 @@ namespace XMLAnalyzer
             // starting tags vs ending tags
             foreach (var tag in xmlfile.StartingTagsList)
             {
-                if (xmlfile.EndingTagsList.Where(t => t.TagName == tag.TagName && t.ChildLevel == tag.ChildLevel && t.Parent == tag.Parent).FirstOrDefault() == null)
+                if(tag.TagType == true)
                 {
-                    errors_list.Add(new Error() { LineNumber = tag.LineNumber, ErrorName = "Tag error", ErrorValue = "Cannot find ending tag for already decalred starting tag (" + tag.TagName + ")", Warning = false });
+                    Console.WriteLine("FALSE");
+                    if (xmlfile.EndingTagsList.Where(t => t.TagName == tag.TagName).FirstOrDefault() == null)
+                    {
+                        errors_list.Add(new Error() { LineNumber = tag.LineNumber, ErrorName = "Tag error", ErrorValue = "Cannot find ending tag for already decalred starting tag (" + tag.TagName + ")", Warning = false });
+                    }
                 }
+                else
+                {
+                    if (xmlfile.EndingTagsList.Where(t => t.TagName == tag.TagName && t.ChildLevel == tag.ChildLevel && t.Parent == tag.Parent).FirstOrDefault() == null)
+                    {
+                        errors_list.Add(new Error() { LineNumber = tag.LineNumber, ErrorName = "Tag error", ErrorValue = "Cannot find ending tag for already decalred starting tag (" + tag.TagName + ")", Warning = false });
+                    }
+                }
+                
             }
+
             Console.WriteLine(String.Join("\n", xmlfile.StartingTagsList.Select(a => a.TagName + ":" + a.ChildLevel + ":" + (a.Parent != null ? a.Parent.TagName : "BRAK"))));
             Console.WriteLine("\n KON \n" + String.Join("\n", xmlfile.EndingTagsList.Select(a => a.TagName + ":" + a.ChildLevel + ":" + (a.Parent != null ? a.Parent.TagName : "BRAK"))));
 
@@ -261,18 +274,21 @@ namespace XMLAnalyzer
                             endingTagDec = true; // zmienna pomocnicza
                             level--;
                             Tag endTag = GetTag(line.Content, i + 2, line.LineNumber);
-                            
+
                             // musimy ustalic temu tagowi jeszcze rodzica
                             var parent_tag = startingTags.Where(t => t.TagId < tag_id && t.ChildLevel == level - 1).OrderByDescending(t => t.TagId).FirstOrDefault();
                             if (parent_tag == null)
+                            {
                                 endTag.Parent = null;
+                                endTag.TagType = true;
+                            }
                             else
                                 endTag.Parent = parent_tag;
 
                             endTag.ChildLevel = level;
                             endTag.TagId = tag_id;
                             tag_id++;
-                           
+
                             // przy każdym tagu kończącym obniżamy poziom o 1; 
                             endingTags.Add(endTag);
                             //Console.Write("END:"+endTagName);
@@ -292,9 +308,12 @@ namespace XMLAnalyzer
                             startTag.TagId = tag_id;
 
                             // musimy ustalic temu tagowi jeszcze rodzica
-                            var parent_tag = startingTags.Where(t => t.TagId < tag_id && t.ChildLevel == level - 1).OrderByDescending(t=>t.TagId).FirstOrDefault();
+                            var parent_tag = startingTags.Where(t => t.TagId < tag_id && t.ChildLevel == level - 1).OrderByDescending(t => t.TagId).FirstOrDefault();
                             if (parent_tag == null)
+                            {
                                 startTag.Parent = null;
+                                startTag.TagType = true;
+                            }
                             else
                                 startTag.Parent = parent_tag;
 
