@@ -15,7 +15,8 @@ namespace XMLAnalyzer
         public string Content { get; set; }
         public bool HasError { get; set;}
         public bool HasRoot { get; set; }
-       
+        public bool HasXmlDec { get; set; }
+
         public List<Tag> StartingTagsList { get; set; }
         public List<Tag> EndingTagsList { get; set; }
     }

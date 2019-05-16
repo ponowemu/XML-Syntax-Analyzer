@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:XMLAnalyzer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="645.576">
+        Title="MainWindow" Height="550" Width="645.576">
     <Grid>
      
 
@@ -34,7 +34,7 @@
                                 <TextBlock>The list of found errors in your file</TextBlock>
                             </StackPanel>
                         </Expander.Header>
-                        <DataGrid MaxHeight="600"  VerticalScrollBarVisibility="Visible" HorizontalAlignment="Stretch" x:Name="file_lines"/>
+                        <DataGrid MaxHeight="550"  VerticalScrollBarVisibility="Visible" HorizontalAlignment="Stretch" x:Name="file_lines"/>
                     </Expander>
 
                 </Grid>
