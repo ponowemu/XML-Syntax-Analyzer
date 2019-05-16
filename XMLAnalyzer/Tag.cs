@@ -12,7 +12,7 @@ namespace XMLAnalyzer
         public string TagName { get; set; }
         public bool HasAttribute { get; set; }
         public int ChildLevel { get; set; }
-        public Attribute Attribute { get; set; }
+        public List<Attribute> Attributes { get; set; }
         public Tag Parent { get; set; }
         public bool TagType { get; set; }
         public Text Text { get; set; }

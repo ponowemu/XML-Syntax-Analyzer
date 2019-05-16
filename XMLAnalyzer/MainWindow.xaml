@@ -28,14 +28,27 @@
                         </GroupBox>
                         <Button Content="Validate" HorizontalAlignment="Left" Height="20" Width="200" VerticalAlignment="Bottom" Click="Button_Click_1"></Button>
                     </Grid>
-                    <Expander Margin="0,105,0,10" IsExpanded="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                        <Expander.Header>
-                            <StackPanel>
-                                <TextBlock>The list of found errors in your file</TextBlock>
-                            </StackPanel>
-                        </Expander.Header>
-                        <DataGrid MaxHeight="550"  VerticalScrollBarVisibility="Visible" HorizontalAlignment="Stretch" x:Name="file_lines"/>
-                    </Expander>
+                    <Grid>
+                        <Expander Margin="0,95,0,10" IsExpanded="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <Expander.Header>
+                                <StackPanel>
+                                    <TextBlock>Content of the file</TextBlock>
+                                </StackPanel>
+                            </Expander.Header>
+                            <DataGrid MaxHeight="300" HorizontalContentAlignment="Stretch" ColumnWidth="*" EnableRowVirtualization="False" VerticalAlignment="Top"  VerticalScrollBarVisibility="Visible" HorizontalAlignment="Stretch" x:Name="file_lines"/>
+                        </Expander>
+                    </Grid>
+                    <Grid>
+                        <Expander Margin="0,430,0,10" IsExpanded="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <Expander.Header>
+                                <StackPanel>
+                                    <TextBlock>The list of found errors in your file</TextBlock>
+                                </StackPanel>
+                            </Expander.Header>
+                            <DataGrid HorizontalContentAlignment="Stretch" ColumnWidth="*" MaxHeight="300" EnableRowVirtualization="False" VerticalAlignment="Top"  VerticalScrollBarVisibility="Visible" HorizontalAlignment="Stretch" x:Name="error_list"/>
+                        </Expander>
+                    </Grid>
+                    
 
                 </Grid>
 

@@ -11,5 +11,6 @@ namespace XMLAnalyzer
         public int LineNumber { get; set; }
         public bool HasError { get; set; }
         public string Content { get; set; }
+        public string Errors { get; set; }
     }
 }

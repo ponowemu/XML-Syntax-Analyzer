@@ -17,6 +17,12 @@ using System.Windows.Shapes;
 
 namespace XMLAnalyzer
 {
+    // trzeba pomyśleć nad jedną ważną rzeczą
+    // mianowicie sprawdzania tagów początkowych i końcowych
+    // nie może być tak, że dla początkowego tagu znajdziemy jakiś inny tag końcowy
+    // o tej samej nazwie i zaliczymy to jakoby tag początkowy był poprawnie zamknięty.
+    // musimy dlatego więc sprawdzać rodzica tagu początkowego i końcowego !!
+
     /// <summary>
     /// Logika interakcji dla klasy MainWindow.xaml
     /// </summary>
@@ -28,7 +34,8 @@ namespace XMLAnalyzer
         private readonly Regex regexLetters = new Regex("^[a-zA-Z]*$");
         private readonly Regex regexAll = new Regex("^[a-zA-Z0-9.,\"' ]*$");
         private readonly Regex regexAttribute = new Regex("^[a-zA-Z]*=\"([a-zA-Z0-9]*)\"(>| )");
-
+        private readonly Regex regexAttributeName = new Regex("(^[a-zA-Z]+[0-9]*)=");
+        private readonly Regex regexAttributeValue = new Regex("\"([a-zA-Z]+[0-9]*)\"");
 
         public MainWindow()
         {
@@ -37,6 +44,8 @@ namespace XMLAnalyzer
         }
         public bool CheckXml(string line)
         {
+            // pomyśleć o rozbudowanie trochę tego sprawdzania
+            // póki co jest ubogie. 
             var characters = line;
             if (characters[0] == '<' && characters[1] == '?')
             {
@@ -50,33 +59,48 @@ namespace XMLAnalyzer
             else
                 return false;
         }
-        public bool CheckAttribute(string line, int index, int lineNumber)
+        public int CheckAttribute(string line, int index, int lineNumber)
         {
             string subString = line.Substring(index);
             if (regexAttribute.IsMatch(subString.Trim()))
             {
                 //Console.WriteLine("D: " + subString);
-                return true;
+                return 1;
+            }
+            else if (subString.Trim().Contains("="))
+            {
+                return 2;
             }
             else
-                return false;
+                return 3;
         }
-        public string GetAttributeName(string line, int index, int lineNumber)
+        private Attribute GetAttribute(string line, int index, int lineNumber)
         {
             // ta metody do przebudowy
-            string attributeName = "";
+            var attr = new Attribute();
             string subString = line.Substring(index);
             if (regexAttribute.IsMatch(subString.Trim()))
             {
                 Console.WriteLine("D: " + subString);
+                var name_match = regexAttributeName.Match(subString.Trim());
+                var attribute_name = name_match.Groups[1].Value;
+
+                var value_match = regexAttributeValue.Match(subString.Trim());
+                var attribute_value = value_match.Groups[1].Value;
+
+                attr.AttributeId = 1;
+                attr.AttributeName = attribute_name;
+                attr.AttributeValue = attribute_value;
             }
-            else
-                attributeName = "";
-            return attributeName;
+            //Console.WriteLine(attr.AttributeName + ": " + attr.AttributeValue);
+            return attr;
         }
-        public string GetTagName(string line, int index, int lineNumber)
+        private Tag GetTag(string line, int index, int lineNumber)
         {
             string tagName = "";
+            Tag tag = new Tag();
+            List<Attribute> attr_list = new List<Attribute>();
+
             for (int i = index; i < line.Length; i++)
             {
                 if (line[i] == '>')
@@ -84,15 +108,23 @@ namespace XMLAnalyzer
                 else if (line[i] == ' ')
                 {
                     // tutaj musimy sprawdzać czy został dodany w takim razie atrybut
-                    if(this.CheckAttribute(line, i, lineNumber))
+                    if (this.CheckAttribute(line, i, lineNumber) == 1) // wszystko OK, jeżeli = 1
                     {
+                        var attr = this.GetAttribute(line, i, lineNumber);
+                        tag.HasAttribute = true;
+                        attr_list.Add(attr); // dodajemy atrybut do listy atrybutów danego tagu.
                         // już wiemy że po spacji jest deklarowany atrybut
                         // tutaj jeszcze wyciągnijmy nazwę i wartość atrybutu
                         // następnie dodajmy go do listy atrybutów
                         break;
                     }
-                    else
+                    else if (this.CheckAttribute(line, i, lineNumber) == 2)
                     {
+                        errors_list.Add(new Error() { ErrorName = "Bad attribute declaration", ErrorValue = "Attribute declarations can contain only letters and numbers without spaces", Warning = false, LineNumber = lineNumber });
+                    }
+                    else if (this.CheckAttribute(line, i, lineNumber) == 3)
+                    {
+                        tagName += line[i];
                         errors_list.Add(new Error() { ErrorName = "Bad tag declaration", ErrorValue = "Tag declarations cannot contain spaces", Warning = false, LineNumber = lineNumber });
                     }
                 }
@@ -102,8 +134,10 @@ namespace XMLAnalyzer
                 }
 
             }
-
-            return tagName;
+            tag.Attributes = attr_list;
+            tag.TagName = tagName;
+            tag.LineNumber = lineNumber;
+            return tag;
         }
         public string GetTextValue(string line, int index)
         {
@@ -140,22 +174,40 @@ namespace XMLAnalyzer
             // starting tags vs ending tags
             foreach (var tag in xmlfile.StartingTagsList)
             {
-                if (xmlfile.EndingTagsList.Where(t => t.TagName == tag.TagName).FirstOrDefault() == null)
+                if (xmlfile.EndingTagsList.Where(t => t.TagName == tag.TagName && t.ChildLevel == tag.ChildLevel && t.Parent == tag.Parent).FirstOrDefault() == null)
                 {
                     errors_list.Add(new Error() { LineNumber = tag.LineNumber, ErrorName = "Tag error", ErrorValue = "Cannot find ending tag for already decalred starting tag (" + tag.TagName + ")", Warning = false });
-                    //DataGridRow row = (DataGridRow)file_lines.ItemContainerGenerator.ContainerFromIndex(tag.LineNumber);
-                    //row.Background = Brushes.Red;
                 }
             }
-            Console.WriteLine(String.Join(",", xmlfile.StartingTagsList.Select(a => a.TagName)));
+            Console.WriteLine(String.Join("\n", xmlfile.StartingTagsList.Select(a => a.TagName + ":" + a.ChildLevel + ":" + (a.Parent != null ? a.Parent.TagName : "BRAK"))));
+            Console.WriteLine("\n KON \n" + String.Join("\n", xmlfile.EndingTagsList.Select(a => a.TagName + ":" + a.ChildLevel + ":" + (a.Parent != null ? a.Parent.TagName : "BRAK"))));
+
             this.PrintErrors();
         }
         private void PrintErrors()
         {
-            foreach (var error in errors_list)
+            if (errors_list.Count() > 0)
             {
-                Console.WriteLine("Line " + error.LineNumber + ": [" + error.ErrorName + "] " + error.ErrorValue);
+                MessageBox.Show("Document contains some errors! You can see details in the table below. ", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                error_list.ItemsSource = errors_list;
+
+                foreach (var error in errors_list)
+                {
+                    Console.WriteLine("Line " + error.LineNumber + ": [" + error.ErrorName + "] " + error.ErrorValue);
+
+                    DataGridRow row = (DataGridRow)file_lines.ItemContainerGenerator
+                         .ContainerFromIndex(error.LineNumber);
+
+                    row.Background = Brushes.Red;
+                    row.Foreground = Brushes.WhiteSmoke;
+                }
             }
+            else
+            {
+                MessageBox.Show("No errors found in the document ", "Success", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+
+            }
+
         }
         private void Parse(List<Line> xml_lines)
         {
@@ -164,6 +216,9 @@ namespace XMLAnalyzer
             List<Tag> endingTags = new List<Tag>();
             List<Error> errorsList = new List<Error>();
             bool HasXmlDec = false;
+            int level = 0;
+            int tag_id = 1;
+
             var xmlFile = new Xml()
             {
                 HasError = false,
@@ -204,28 +259,48 @@ namespace XMLAnalyzer
                         { // początek tagu zamykającego
 
                             endingTagDec = true; // zmienna pomocnicza
+                            level--;
+                            Tag endTag = GetTag(line.Content, i + 2, line.LineNumber);
+                            
+                            // musimy ustalic temu tagowi jeszcze rodzica
+                            var parent_tag = startingTags.Where(t => t.TagId < tag_id && t.ChildLevel == level - 1).OrderByDescending(t => t.TagId).FirstOrDefault();
+                            if (parent_tag == null)
+                                endTag.Parent = null;
+                            else
+                                endTag.Parent = parent_tag;
 
-                            string endTagName = GetTagName(line.Content, i + 2, line.LineNumber);
-                            endingTags.Add(new Tag()
-                            {
-                                TagName = endTagName,
-                                LineNumber = lineNumber
-                            });
+                            endTag.ChildLevel = level;
+                            endTag.TagId = tag_id;
+                            tag_id++;
+                           
+                            // przy każdym tagu kończącym obniżamy poziom o 1; 
+                            endingTags.Add(endTag);
                             //Console.Write("END:"+endTagName);
                         }
                         else if (characters[i + 1] == ' ')
                             errors_list.Add(new Error() { ErrorName = "Bad tag declaration", ErrorValue = "Tag declarations cannot contain spaces", Warning = false, LineNumber = lineNumber });
                         else
                         {
+
+                            // pierwszy znak to < następny to tekst.
+                            // mamy więc do czynienia z tagiem początkowym
+                            // pobieramy jego dane i tyle.
                             startingTagDec = true; // zmienna pomocnicza;
 
-                            string startTagName = GetTagName(line.Content, i + 1, line.LineNumber);
-                            Console.WriteLine(startTagName);
-                            startingTags.Add(new Tag()
-                            {
-                                TagName = startTagName,
-                                LineNumber = lineNumber
-                            });
+                            Tag startTag = GetTag(line.Content, i + 1, line.LineNumber);
+                            startTag.ChildLevel = level;
+                            startTag.TagId = tag_id;
+
+                            // musimy ustalic temu tagowi jeszcze rodzica
+                            var parent_tag = startingTags.Where(t => t.TagId < tag_id && t.ChildLevel == level - 1).OrderByDescending(t=>t.TagId).FirstOrDefault();
+                            if (parent_tag == null)
+                                startTag.Parent = null;
+                            else
+                                startTag.Parent = parent_tag;
+
+                            tag_id++;
+                            level++; // przy każdym tagu otwierającym podbijamy poziom o 1
+                            startingTags.Add(startTag);
                             //Console.WriteLine("START:"+startTagName);
                         }
 
