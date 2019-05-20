@@ -36,12 +36,15 @@ namespace XMLAnalyzer
         private readonly Regex regexAttribute = new Regex("^[a-zA-Z]*=\"([a-zA-Z0-9]*)\"(>| )");
         private readonly Regex regexAttributeName = new Regex("(^[a-zA-Z]+[0-9]*)=");
         private readonly Regex regexAttributeValue = new Regex("\"([a-zA-Z]+[0-9]*)\"");
+        private readonly Regex regexTagName = new Regex("^XML[A-Za-z0-9_]*");
+        private readonly Regex regexTagNameFirstDigit = new Regex("^[0-9]+([A-Za-z0-9_]*)$");
 
         public MainWindow()
         {
             InitializeComponent();
 
         }
+        // sprawdzanie deklaracji xml 
         public bool CheckXml(string line)
         {
             // pomyśleć o rozbudowanie trochę tego sprawdzania
@@ -175,7 +178,7 @@ namespace XMLAnalyzer
             foreach (var tag in xmlfile.StartingTagsList)
             {
                 if(tag.TagType == true)
-                {
+                { // tag type TRUE oznacza root'a
                     Console.WriteLine("FALSE");
                     if (xmlfile.EndingTagsList.Where(t => t.TagName == tag.TagName).FirstOrDefault() == null)
                     {
@@ -190,6 +193,19 @@ namespace XMLAnalyzer
                     }
                 }
                 
+            }
+            // check tags names - cannot start with number and "XML" word
+            foreach(var tag in xmlfile.StartingTagsList)
+            {
+                if(regexTagNameFirstDigit.IsMatch(tag.TagName))
+                {
+                    errors_list.Add(new Error() { LineNumber = tag.LineNumber, ErrorName = "Tag error", ErrorValue = "Tag's name cannot start with digit (" + tag.TagName + ")", Warning = false });
+                }
+                if(regexTagName.IsMatch(tag.TagName))
+                {
+                    errors_list.Add(new Error() { LineNumber = tag.LineNumber, ErrorName = "Tag error", ErrorValue = "Tag's name cannot start with XML word (" + tag.TagName + ")", Warning = false });
+
+                }
             }
 
             Console.WriteLine(String.Join("\n", xmlfile.StartingTagsList.Select(a => a.TagName + ":" + a.ChildLevel + ":" + (a.Parent != null ? a.Parent.TagName : "BRAK"))));
@@ -295,6 +311,8 @@ namespace XMLAnalyzer
                         }
                         else if (characters[i + 1] == ' ')
                             errors_list.Add(new Error() { ErrorName = "Bad tag declaration", ErrorValue = "Tag declarations cannot contain spaces", Warning = false, LineNumber = lineNumber });
+                        else if(Char.IsDigit(characters[i+1]))
+                            errors_list.Add(new Error() { LineNumber = lineNumber, ErrorName = "Tag error", ErrorValue = "Tag's name cannot start with digit", Warning = false });
                         else
                         {
 
