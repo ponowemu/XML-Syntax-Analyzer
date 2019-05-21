@@ -29,6 +29,7 @@ namespace XMLAnalyzer
     public partial class MainWindow : Window
     {
         private Xml main_xml_file;
+        private List<Line> xml_lines;
         private List<Error> errors_list = new List<Error>();
         private readonly Regex regexLettersNumbers = new Regex("^[a-zA-Z0-9]*$");
         private readonly Regex regexLetters = new Regex("^[a-zA-Z]*$");
@@ -267,7 +268,7 @@ namespace XMLAnalyzer
 
                 string tempTag = "";
                 int lineNumber = line.LineNumber;
-                bool hasError = line.HasError;
+                //bool hasError = line.HasError;
 
                 var characters = line.Content;
                 var charactersNumber = line.Content.Length;
@@ -383,8 +384,8 @@ namespace XMLAnalyzer
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            xml_lines = new List<Line>();
             // Tworzymy listę 
-            List<Line> xml_lines = new List<Line>();
             // otwieramy pole wybory 
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
 
@@ -404,7 +405,7 @@ namespace XMLAnalyzer
                     {
                         Content = line,
                         LineNumber = counter,
-                        HasError = false
+                        //HasError = false
                     });
                     counter++;
                 }
