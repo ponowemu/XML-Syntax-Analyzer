@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="550" Width="645.576">
     <Grid>
-     
+
 
         <DockPanel>
             <Menu DockPanel.Dock="Top">
@@ -24,9 +24,10 @@
                             <Button Content="Select" HorizontalAlignment="Left" Height="20" Margin="0,0,0,-5"  VerticalAlignment="Center" Width="75" Click="Button_Click" />
                         </GroupBox>
                         <GroupBox Header="Wybierz folder zapisu (XML)" HorizontalAlignment="Right" Height="50" VerticalAlignment="Top" Width="230">
-                            <Button Content="Select" HorizontalAlignment="Left" Height="20"  VerticalAlignment="Center" Width="75" />
+                            <Button Content="Select" HorizontalAlignment="Left" Height="20"  VerticalAlignment="Center" Width="75" Click="Button_Click_2" />
                         </GroupBox>
                         <Button Content="Validate" HorizontalAlignment="Left" Height="20" Width="200" VerticalAlignment="Bottom" Click="Button_Click_1"></Button>
+                        <Button Content="Save" HorizontalAlignment="Right" VerticalAlignment="Bottom"  Width="200" Click="Button_Click_3"/>
                     </Grid>
                     <Grid>
                         <Expander Margin="0,95,0,10" IsExpanded="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
@@ -47,13 +48,14 @@
                             </Expander.Header>
                             <DataGrid HorizontalContentAlignment="Stretch" ColumnWidth="*" MaxHeight="300" EnableRowVirtualization="False" VerticalAlignment="Top"  VerticalScrollBarVisibility="Visible" HorizontalAlignment="Stretch" x:Name="error_list"/>
                         </Expander>
+                        
                     </Grid>
-                    
+
 
                 </Grid>
 
             </StackPanel>
         </DockPanel>
-        
+
     </Grid>
 </Window>

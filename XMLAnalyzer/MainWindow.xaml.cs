@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -39,6 +40,7 @@ namespace XMLAnalyzer
         private readonly Regex regexAttributeValue = new Regex("\"([a-zA-Z]+[0-9]*)\"");
         private readonly Regex regexTagName = new Regex("^XML[A-Za-z0-9_]*");
         private readonly Regex regexTagNameFirstDigit = new Regex("^[0-9]+([A-Za-z0-9_]*)$");
+        private string saveDir = "";
 
         public MainWindow()
         {
@@ -159,6 +161,25 @@ namespace XMLAnalyzer
             }
             return text;
         }
+        private bool CheckNested(Tag tag)
+        {
+            var search_tag = main_xml_file.AllTags.FindIndex(t => t.Parent == tag.Parent && t.TagName == tag.TagName && t.LineNumber == tag.LineNumber);
+            var next_tag = main_xml_file.AllTags.ElementAt(search_tag + 1);
+            var next_next_tag = main_xml_file.AllTags.ElementAt(search_tag + 2);
+
+            if (tag.TagName.ToLower() != next_tag.TagName.ToLower())
+            {
+                if (tag.TagName.ToLower() == next_next_tag.TagName.ToLower())
+                { // sprawdzamy poprawne zagnieżdżenie tagów
+                    if (errors_list.Where(e => e.LineNumber == tag.LineNumber && e.ErrorName == "Tag nesting error").SingleOrDefault() == null)
+                    {
+                        errors_list.Add(new Error() { LineNumber = tag.LineNumber, ErrorName = "Tag nesting error", ErrorValue = "Tags are nested in a bad way", Warning = false });
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
         private void Validate(Xml xmlfile)
         {
 
@@ -178,9 +199,8 @@ namespace XMLAnalyzer
             // starting tags vs ending tags
             foreach (var tag in xmlfile.StartingTagsList)
             {
-                if(tag.TagType == true)
+                if (tag.TagType == true)
                 { // tag type TRUE oznacza root'a
-                    Console.WriteLine("FALSE");
                     if (xmlfile.EndingTagsList.Where(t => t.TagName == tag.TagName).FirstOrDefault() == null)
                     {
                         errors_list.Add(new Error() { LineNumber = tag.LineNumber, ErrorName = "Tag error", ErrorValue = "Cannot find ending tag for already decalred starting tag (" + tag.TagName + ")", Warning = false });
@@ -190,19 +210,28 @@ namespace XMLAnalyzer
                 {
                     if (xmlfile.EndingTagsList.Where(t => t.TagName == tag.TagName && t.ChildLevel == tag.ChildLevel && t.Parent == tag.Parent).FirstOrDefault() == null)
                     {
-                        errors_list.Add(new Error() { LineNumber = tag.LineNumber, ErrorName = "Tag error", ErrorValue = "Cannot find ending tag for already decalred starting tag (" + tag.TagName + ")", Warning = false });
+                        if(!this.CheckNested(tag))
+                        {
+                            if (xmlfile.EndingTagsList.Where(t => t.TagName.ToLower() == tag.TagName.ToLower() && t.ChildLevel == tag.ChildLevel && t.Parent == tag.Parent).FirstOrDefault() == null)
+                            {
+                                errors_list.Add(new Error() { LineNumber = tag.LineNumber, ErrorName = "Tag error", ErrorValue = "Cannot find ending tag for already decalred starting tag (" + tag.TagName + ")", Warning = false });
+                            }
+                            else
+                                errors_list.Add(new Error() { LineNumber = tag.LineNumber, ErrorName = "Tag declaration error", ErrorValue = "Case sensitive error. (" + tag.TagName + ")", Warning = false });
+                        }                        
                     }
                 }
-                
+
             }
+
             // check tags names - cannot start with number and "XML" word
-            foreach(var tag in xmlfile.StartingTagsList)
+            foreach (var tag in xmlfile.StartingTagsList)
             {
-                if(regexTagNameFirstDigit.IsMatch(tag.TagName))
+                if (regexTagNameFirstDigit.IsMatch(tag.TagName))
                 {
                     errors_list.Add(new Error() { LineNumber = tag.LineNumber, ErrorName = "Tag error", ErrorValue = "Tag's name cannot start with digit (" + tag.TagName + ")", Warning = false });
                 }
-                if(regexTagName.IsMatch(tag.TagName))
+                if (regexTagName.IsMatch(tag.TagName))
                 {
                     errors_list.Add(new Error() { LineNumber = tag.LineNumber, ErrorName = "Tag error", ErrorValue = "Tag's name cannot start with XML word (" + tag.TagName + ")", Warning = false });
 
@@ -218,7 +247,7 @@ namespace XMLAnalyzer
         {
             if (errors_list.Count() > 0)
             {
-                MessageBox.Show("Document contains some errors! You can see details in the table below. ", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show("Document contains some errors! You can see details in the table below. ", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 error_list.ItemsSource = errors_list;
 
                 foreach (var error in errors_list)
@@ -234,7 +263,7 @@ namespace XMLAnalyzer
             }
             else
             {
-                MessageBox.Show("No errors found in the document ", "Success", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                System.Windows.MessageBox.Show("No errors found in the document ", "Success", MessageBoxButton.OK, MessageBoxImage.Asterisk);
 
             }
 
@@ -245,6 +274,8 @@ namespace XMLAnalyzer
             List<Tag> startingTags = new List<Tag>();
             List<Tag> endingTags = new List<Tag>();
             List<Error> errorsList = new List<Error>();
+            List<Tag> allTags = new List<Tag>();
+
             bool HasXmlDec = false;
             int level = 0;
             int tag_id = 1;
@@ -308,11 +339,12 @@ namespace XMLAnalyzer
 
                             // przy każdym tagu kończącym obniżamy poziom o 1; 
                             endingTags.Add(endTag);
+                            allTags.Add(endTag);
                             //Console.Write("END:"+endTagName);
                         }
                         else if (characters[i + 1] == ' ')
                             errors_list.Add(new Error() { ErrorName = "Bad tag declaration", ErrorValue = "Tag declarations cannot contain spaces", Warning = false, LineNumber = lineNumber });
-                        else if(Char.IsDigit(characters[i+1]))
+                        else if (Char.IsDigit(characters[i + 1]))
                             errors_list.Add(new Error() { LineNumber = lineNumber, ErrorName = "Tag error", ErrorValue = "Tag's name cannot start with digit", Warning = false });
                         else
                         {
@@ -339,6 +371,7 @@ namespace XMLAnalyzer
                             tag_id++;
                             level++; // przy każdym tagu otwierającym podbijamy poziom o 1
                             startingTags.Add(startTag);
+                            allTags.Add(startTag);
                             //Console.WriteLine("START:"+startTagName);
                         }
 
@@ -378,6 +411,7 @@ namespace XMLAnalyzer
             xmlFile.StartingTagsList = startingTags;
             xmlFile.StartingTagsNumber = startingTags.Count();
             xmlFile.EndingTagsNumber = endingTags.Count();
+            xmlFile.AllTags = allTags;
 
             main_xml_file = xmlFile;
         }
@@ -421,6 +455,40 @@ namespace XMLAnalyzer
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             this.Validate(main_xml_file);
+        }
+
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            string dir = "";
+            using (var dialog = new FolderBrowserDialog())
+            {
+                DialogResult result = dialog.ShowDialog();
+                dir = dialog.SelectedPath;
+            }
+            this.saveDir = dir;
+            Console.WriteLine(dir);
+        }
+
+        private void Button_Click_3(object sender, RoutedEventArgs e)
+        { // save to file
+            if(saveDir != "")
+            {
+                using (StreamWriter outputFile = new StreamWriter(System.IO.Path.Combine(saveDir, "new_file.xml")))
+                {
+                    outputFile.WriteLine("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>");
+                    foreach(var starting_tag in main_xml_file.StartingTagsList)
+                    {
+                        outputFile.WriteLine("<"+starting_tag.TagName+">");
+                    }
+                    foreach(var ending_tag in main_xml_file.EndingTagsList)
+                    {
+                        outputFile.WriteLine("</" + ending_tag.TagName +">");
+                    }
+                }
+                System.Windows.MessageBox.Show("File saved correctly. ", "Success", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+            }
+            else
+                System.Windows.MessageBox.Show("Select the directory in which you want to save the file first. ", "Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
         }
     }
 }
